@@ -1,3 +1,4 @@
+from django.utils.functional import empty
 import requests
 import json
 from bs4 import BeautifulSoup
@@ -136,14 +137,14 @@ class AzureAPI:
 
 
 
-    def extractive_summarization(self, document):
+    def extractive_summarization(self, document,lines=3):
         client = self.authenticate_client()
         document = [document]
 
         poller = client.begin_analyze_actions(
             document,
             actions=[
-                ExtractSummaryAction()
+                ExtractSummaryAction(max_sentence_count=lines)
             ],
         )
 
@@ -157,4 +158,28 @@ class AzureAPI:
                 return None
             else:
                 return {"summary":" ".join([sentence.text for sentence in extract_summary_result.sentences])}
+    def entity_linking_example(self,documents):
+        client = self.authenticate_client()
+        documents = [documents]
+        try:
+            result = client.recognize_linked_entities(documents = documents)[0]
+            # print("Linked Entities:\n")
+            res = []
+            for entity in result.entities:
+                # print("\tName: ", entity.name, "\tId: ", entity.data_source_entity_id, "\tUrl: ", entity.url,
+                # "\n\tData Source: ", entity.data_source)
+                if entity.matches[0].confidence_score < 0.3:
+                    continue
+                d = {   "name": entity.name, 
+                        "url": entity.url,
+                        "match": entity.matches[0].text,
+                        "offset": entity.matches[0].offset,
+                        "length": entity.matches[0].length,
+                    }
+                res.append(d)
+            return res         
+        except Exception as err:
+            print("Encountered exception. {}".format(err))
+            return None
+        
     

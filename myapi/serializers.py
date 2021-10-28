@@ -39,3 +39,7 @@ class SentimentSerializer(serializers.Serializer):
 
 class SummarySerializer(serializers.Serializer):
     summary = serializers.CharField()
+
+class WordSerializer(serializers.Serializer):
+    word = serializers.CharField()
+    url = serializers.CharField() or None
